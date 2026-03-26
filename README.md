@@ -2,7 +2,7 @@
 
 A web-based plywood and sheet goods cutlist optimizer. Enter your stock sheet dimensions and required panels, click **Optimize Cuts**, and get visual cutting diagrams with step-by-step cut sequences, alternative layouts, drag-and-drop repositioning, and PDF/PNG export.
 
-**Live:** [cut-planner.vercel.app](https://cut-planner.vercel.app)
+**Live:** [cutplanner.stevescher.com](https://cutplanner.stevescher.com)
 **Repo:** [github.com/stevescher/cut-planner](https://github.com/stevescher/cut-planner)
 
 ---
@@ -445,7 +445,7 @@ npm run lint
 
 ### Auto-deploy
 Every push to `main` triggers a Vercel production deployment automatically via the GitHub → Vercel integration.
-URL: **[cut-planner.vercel.app](https://cut-planner.vercel.app)**
+URL: **[cutplanner.stevescher.com](https://cutplanner.stevescher.com)**
 
 ### Manual deploy
 ```bash
