@@ -135,7 +135,7 @@ export default function Home() {
               disabled={!canOptimize || isOptimizing}
             >
               <Scissors className="h-4 w-4" />
-              {isOptimizing ? 'Optimizing…' : 'Optimize Cuts'}
+              {isOptimizing ? 'Planning…' : 'Plan Cuts'}
             </button>
           </div>
         </aside>

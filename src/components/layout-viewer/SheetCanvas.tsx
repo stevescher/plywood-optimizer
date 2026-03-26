@@ -21,7 +21,7 @@ const PADDING = 40;
 const MAX_WIDTH = 800;
 
 export function SheetCanvas({ sheetLayout, stockSheet, sheetNumber }: SheetCanvasProps) {
-  const { showLabels, viewMode, showCutSequence } = useViewStore();
+  const { showLabels, viewMode, showCutSequence, showEdgeDims, zoom } = useViewStore();
   const { units } = useProjectStore();
   const fmt = (v: number) => formatDisplay(v, units);
   const sfx = unitSuffix(units);
@@ -40,7 +40,7 @@ export function SheetCanvas({ sheetLayout, stockSheet, sheetNumber }: SheetCanva
   const sheetKey = `${stockSheet.id}-${sheetLayout.sheetIndex}`;
   const sheetW = stockSheet.length;
   const sheetH = stockSheet.width;
-  const scale = Math.min((MAX_WIDTH - PADDING * 2) / sheetW, 400 / sheetH);
+  const scale = Math.min((MAX_WIDTH - PADDING * 2) / sheetW, 400 / sheetH) * zoom;
   const svgW = sheetW * scale + PADDING * 2;
   const svgH = sheetH * scale + PADDING * 2;
 
@@ -326,10 +326,11 @@ export function SheetCanvas({ sheetLayout, stockSheet, sheetNumber }: SheetCanva
             dimFill = 'rgba(255,255,255,0.8)';
           }
 
-          const showRotate = pw >= 28 && ph >= 28;
           const rotateBtnSize = 9;
-          const rotateBtnX = px + rotateBtnSize + 3;
-          const rotateBtnY = py + ph - rotateBtnSize - 3;
+          const smallPiece = pw < 28 || ph < 28;
+          // For small pieces, float the button above-left the piece; otherwise inside bottom-left
+          const rotateBtnX = smallPiece ? px + rotateBtnSize : px + rotateBtnSize + 3;
+          const rotateBtnY = smallPiece ? py - rotateBtnSize - 2 : py + ph - rotateBtnSize - 3;
 
           return (
             <g
@@ -345,8 +346,8 @@ export function SheetCanvas({ sheetLayout, stockSheet, sheetNumber }: SheetCanva
                 rx={2}
               />
 
-              {/* Rotate button — bottom-left corner */}
-              {showRotate && (
+              {/* Rotate button — bottom-left corner (or above piece if too small) */}
+              {(
                 <g
                   onClick={(e) => handleRotate(e, i)}
                   style={{ cursor: 'pointer' }}
@@ -414,6 +415,37 @@ export function SheetCanvas({ sheetLayout, stockSheet, sheetNumber }: SheetCanva
                   >
                     {fmt(p.width)}{sfx} &times; {fmt(p.height)}{sfx}
                   </text>
+                </>
+              )}
+
+              {/* Edge dimension labels */}
+              {showEdgeDims && (
+                <>
+                  {/* Width — along top edge */}
+                  {pw >= 20 && (
+                    <text
+                      x={px + pw / 2} y={py + 5}
+                      textAnchor="middle" dominantBaseline="hanging"
+                      fill={outlineMode ? '#334155' : 'rgba(255,255,255,0.9)'}
+                      fontSize={8} fontWeight="700"
+                      style={{ pointerEvents: 'none', userSelect: 'none' }}
+                    >
+                      {fmt(p.width)}{sfx}
+                    </text>
+                  )}
+                  {/* Height — along left edge, rotated */}
+                  {ph >= 20 && (
+                    <text
+                      x={px + 5} y={py + ph / 2}
+                      textAnchor="middle" dominantBaseline="hanging"
+                      transform={`rotate(-90, ${px + 5}, ${py + ph / 2})`}
+                      fill={outlineMode ? '#334155' : 'rgba(255,255,255,0.9)'}
+                      fontSize={8} fontWeight="700"
+                      style={{ pointerEvents: 'none', userSelect: 'none' }}
+                    >
+                      {fmt(p.height)}{sfx}
+                    </text>
+                  )}
                 </>
               )}
             </g>

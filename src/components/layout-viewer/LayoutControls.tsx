@@ -3,7 +3,7 @@
 import { useViewStore, ViewMode } from '@/store/useViewStore';
 import { useLayoutStore } from '@/store/useLayoutStore';
 import { useDragStore } from '@/store/useDragStore';
-import { Tag, Shuffle, ListOrdered, Unlock, Palette } from 'lucide-react';
+import { Tag, ListOrdered, Unlock, Palette, Ruler } from 'lucide-react';
 
 function ToggleBtn({
   active, onClick, title, icon: Icon, label,
@@ -33,14 +33,15 @@ const VIEW_MODES: { value: ViewMode; label: string; title: string }[] = [
 ];
 
 export function LayoutControls() {
-  const { showLabels, viewMode, showCutSequence, toggleLabels, setViewMode, toggleCutSequence } = useViewStore();
-  const { solutions, revealedCount, shuffleNext } = useLayoutStore();
+  const { showLabels, viewMode, showCutSequence, showEdgeDims, toggleLabels, setViewMode, toggleCutSequence, toggleEdgeDims } = useViewStore();
+  const { solutions, revealedCount } = useLayoutStore();
   const { pinnedPieces, clearPins } = useDragStore();
   const pinnedCount = pinnedPieces.size;
 
   return (
     <div className="flex items-center gap-1.5">
       <ToggleBtn active={showLabels} onClick={toggleLabels} title="Toggle piece labels" icon={Tag} label="Labels" />
+      <ToggleBtn active={showEdgeDims} onClick={toggleEdgeDims} title="Show dimensions on each piece edge" icon={Ruler} label="Dimensions" />
       <ToggleBtn active={showCutSequence} onClick={toggleCutSequence} title="Toggle cut sequence numbers" icon={ListOrdered} label="Cuts" />
 
       {/* View mode segmented control */}
@@ -78,20 +79,6 @@ export function LayoutControls() {
         </>
       )}
 
-      {solutions.length > revealedCount && (
-        <>
-          <div className="w-px h-4 bg-slate-200" />
-          <button
-            onClick={shuffleNext}
-            title="Show more layout alternatives"
-            className="h-8 px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5
-                       bg-slate-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all"
-          >
-            <Shuffle className="h-3.5 w-3.5" />
-            More Options
-          </button>
-        </>
-      )}
     </div>
   );
 }

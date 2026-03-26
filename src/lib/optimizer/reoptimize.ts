@@ -282,7 +282,7 @@ export function reOptimizeAroundPinned(
   return {
     ...solution,
     id: nanoid(),
-    strategyName: 'Re-optimized (anchored)',
+    strategyName: 'Re-planned (anchored)',
     sheets: newSheets,
     totalWaste: totalArea > 0 ? ((totalArea - totalUsed) / totalArea) * 100 : 0,
     totalSheets: newSheets.length,
