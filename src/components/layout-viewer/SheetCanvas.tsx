@@ -505,15 +505,15 @@ export function SheetCanvas({ sheetLayout, stockSheet, sheetNumber, maxWidth, on
         </text>
       </svg>
 
-        {/* Expand button — top-right corner of sheet border */}
+        {/* Expand button — top-right corner of the outer SVG card border */}
         {onExpand && (
           <button
             onClick={onExpand}
             title="Expand to full view"
             className="absolute flex items-center justify-center rounded-md
-                       bg-white/80 hover:bg-white text-slate-400 hover:text-slate-700
+                       bg-white hover:bg-slate-50 text-slate-400 hover:text-slate-700
                        shadow-sm border border-slate-200 transition-all"
-            style={{ top: PADDING - 11, right: PADDING - 11, width: 22, height: 22 }}
+            style={{ top: -11, right: -11, width: 22, height: 22, zIndex: 1 }}
           >
             <Maximize2 style={{ width: 12, height: 12 }} />
           </button>

@@ -418,7 +418,7 @@ export function LayoutViewer() {
         const hasNext = idx < totalSheets - 1;
         return (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-3"
+            className="fixed inset-0 z-50 flex items-center justify-center p-6"
             style={{ background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(6px)' }}
             onClick={() => setExpandedSheetIdx(null)}
           >
@@ -450,8 +450,8 @@ export function LayoutViewer() {
 
             {/* Card */}
             <div
-              className="relative bg-white rounded-2xl shadow-2xl overflow-auto p-5
-                         w-[97vw] max-h-[97vh]"
+              className="relative bg-white rounded-2xl shadow-2xl overflow-auto p-6
+                         max-w-[95vw] max-h-[92vh]"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header row: sheet counter + close */}
@@ -473,7 +473,7 @@ export function LayoutViewer() {
                 sheetLayout={sheetLayout}
                 stockSheet={stockSheet}
                 sheetNumber={idx + 1}
-                maxWidth={Math.round(window.innerWidth * 0.94)}
+                maxWidth={Math.min(Math.round(window.innerWidth * 0.88), 1400)}
               />
             </div>
           </div>
