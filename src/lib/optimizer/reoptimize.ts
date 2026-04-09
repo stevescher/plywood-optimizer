@@ -425,8 +425,10 @@ export function reOptimizeAroundPinned(
       stockSheet.width,
     );
 
-    // Recalculate waste
-    const totalArea = stockSheet.length * stockSheet.width;
+    // Recalculate waste against usable area (excluding trim)
+    const usableL = stockSheet.length - stockSheet.trimLeft - stockSheet.trimRight;
+    const usableW = stockSheet.width - stockSheet.trimTop - stockSheet.trimBottom;
+    const totalArea = usableL * usableW;
     const usedArea = newPlacements.reduce((s, p) => s + p.width * p.height, 0);
 
     return {
@@ -440,7 +442,10 @@ export function reOptimizeAroundPinned(
 
   const totalArea = newSheets.reduce((s, sl) => {
     const ss = stockSheets.find((x) => x.id === sl.stockSheetId);
-    return s + (ss ? ss.length * ss.width : 0);
+    if (!ss) return s;
+    const usableL = ss.length - ss.trimLeft - ss.trimRight;
+    const usableW = ss.width - ss.trimTop - ss.trimBottom;
+    return s + usableL * usableW;
   }, 0);
   const totalUsed = newSheets.reduce((s, sl) => s + sl.usedArea, 0);
 

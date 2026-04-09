@@ -48,6 +48,24 @@ export default function Home() {
   const { stockSheets, panels } = useProjectStore();
   const { isOptimizing, solutions } = useLayoutStore();
   const optimize = useOptimizer();
+  const canUndo = useHistoryStore((s) => s.past.length > 0);
+  const canRedo = useHistoryStore((s) => s.future.length > 0);
+
+  const handleUndo = () => {
+    const entry = useHistoryStore.getState().undo();
+    if (entry) {
+      useLayoutStore.getState().setSolutions(entry.solutions);
+      useLayoutStore.getState().setActive(entry.activeSolutionIndex);
+    }
+  };
+
+  const handleRedo = () => {
+    const entry = useHistoryStore.getState().redo();
+    if (entry) {
+      useLayoutStore.getState().setSolutions(entry.solutions);
+      useLayoutStore.getState().setActive(entry.activeSolutionIndex);
+    }
+  };
 
   const canOptimize =
     stockSheets.some((s) => s.length > 0 && s.width > 0) &&
@@ -80,7 +98,30 @@ export default function Home() {
         </div>
 
         <div className="flex items-center gap-2">
-          {solutions.length > 0 && <LayoutControls />}
+          {solutions.length > 0 && (
+            <>
+              <button
+                onClick={handleUndo}
+                disabled={!canUndo}
+                title="Undo (⌘Z)"
+                className="h-7 w-7 rounded-lg flex items-center justify-center text-slate-500
+                           hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <Undo2 className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={handleRedo}
+                disabled={!canRedo}
+                title="Redo (⌘⇧Z)"
+                className="h-7 w-7 rounded-lg flex items-center justify-center text-slate-500
+                           hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <Redo2 className="h-3.5 w-3.5" />
+              </button>
+              <div className="w-px h-4 bg-slate-200" />
+              <LayoutControls />
+            </>
+          )}
         </div>
       </header>
 

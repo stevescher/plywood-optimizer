@@ -70,13 +70,13 @@ export function SheetCanvas({ sheetLayout, stockSheet, sheetNumber, maxWidth, on
       const others = sheetLayout.placements.filter((_, pi) => pi !== placementIndex);
 
       const xCandidates = [
-        0,
-        sheetW - p.width,
+        stockSheet.trimLeft,
+        sheetW - stockSheet.trimRight - p.width,
         ...others.flatMap((o) => [o.x, o.x + o.width, o.x - p.width, o.x + o.width - p.width]),
       ];
       const yCandidates = [
-        0,
-        sheetH - p.height,
+        stockSheet.trimTop,
+        sheetH - stockSheet.trimBottom - p.height,
         ...others.flatMap((o) => [o.y, o.y + o.height, o.y - p.height, o.y + o.height - p.height]),
       ];
 
@@ -89,8 +89,8 @@ export function SheetCanvas({ sheetLayout, stockSheet, sheetNumber, maxWidth, on
         if (Math.abs(rawY - cy) <= threshold) { y = cy; break; }
       }
       return {
-        x: Math.max(0, Math.min(x, sheetW - p.width)),
-        y: Math.max(0, Math.min(y, sheetH - p.height)),
+        x: Math.max(stockSheet.trimLeft, Math.min(x, sheetW - stockSheet.trimRight - p.width)),
+        y: Math.max(stockSheet.trimTop, Math.min(y, sheetH - stockSheet.trimBottom - p.height)),
       };
     },
     [sheetLayout.placements, sheetW, sheetH, scale]
@@ -124,8 +124,8 @@ export function SheetCanvas({ sheetLayout, stockSheet, sheetNumber, maxWidth, on
 
       let rawX = svgPt.x - dragState.offsetX;
       let rawY = svgPt.y - dragState.offsetY;
-      rawX = Math.max(0, Math.min(rawX, sheetW - p.width));
-      rawY = Math.max(0, Math.min(rawY, sheetH - p.height));
+      rawX = Math.max(stockSheet.trimLeft, Math.min(rawX, sheetW - stockSheet.trimRight - p.width));
+      rawY = Math.max(stockSheet.trimTop, Math.min(rawY, sheetH - stockSheet.trimBottom - p.height));
 
       const { x: newX, y: newY } = snapToEdges(rawX, rawY, dragState.placementIndex);
       setDragState((prev) => prev ? { ...prev, currentX: newX, currentY: newY } : null);

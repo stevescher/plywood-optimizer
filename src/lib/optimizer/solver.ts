@@ -181,7 +181,9 @@ function solveWithStrategy(
       os.stockSheet.length,
       os.stockSheet.width,
     );
-    const totalArea = os.stockSheet.length * os.stockSheet.width;
+    const usableL = os.stockSheet.length - os.stockSheet.trimLeft - os.stockSheet.trimRight;
+    const usableW = os.stockSheet.width - os.stockSheet.trimTop - os.stockSheet.trimBottom;
+    const totalArea = usableL * usableW;
     const usedArea = placements.reduce((sum, p) => sum + p.width * p.height, 0);
     const wastePercent = ((totalArea - usedArea) / totalArea) * 100;
 
@@ -198,7 +200,9 @@ function solveWithStrategy(
   const totalArea = sheetLayouts.reduce(
     (sum, sl) => {
       const ss = stockSheets.find((s) => s.id === sl.stockSheetId)!;
-      return sum + ss.length * ss.width;
+      const usableL = ss.length - ss.trimLeft - ss.trimRight;
+      const usableW = ss.width - ss.trimTop - ss.trimBottom;
+      return sum + usableL * usableW;
     },
     0
   );

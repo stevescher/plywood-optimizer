@@ -160,8 +160,8 @@ export function LayoutViewer() {
       updateStockSheet(sheet.id, { quantity: sheet.quantity + extraQty });
     }
     // optimize reads fresh store state, so schedule after state settles
-    setTimeout(() => {
-      optimize();
+    setTimeout(async () => {
+      await optimize();
       setFixing(false);
     }, 50);
   };
