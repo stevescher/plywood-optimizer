@@ -152,5 +152,6 @@ export interface ProjectData {
   stockSheets: StockSheet[];
   panels: Panel[];
   kerf: number;
+  units: 'imperial' | 'metric';
   savedAt: string;
 }

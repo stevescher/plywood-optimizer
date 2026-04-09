@@ -1,7 +1,8 @@
 'use client';
 
 import { Solution, StockSheet } from '@/lib/optimizer/types';
-import { formatDimension } from '@/lib/fractions';
+import { formatDisplay, unitSuffix } from '@/lib/fractions';
+import { useProjectStore } from '@/store/useProjectStore';
 
 interface CutChecklistProps {
   solution: Solution;
@@ -9,6 +10,8 @@ interface CutChecklistProps {
 }
 
 export function CutChecklist({ solution, stockSheets }: CutChecklistProps) {
+  const units = useProjectStore((s) => s.units);
+  const suffix = unitSuffix(units);
   return (
     <div className="p-6 space-y-6 print:p-0">
       <div className="print:hidden space-y-2">
@@ -34,8 +37,8 @@ export function CutChecklist({ solution, stockSheets }: CutChecklistProps) {
               Sheet {si + 1}
               {stockSheet?.label && ` — ${stockSheet.label}`}
               <span className="text-muted-foreground font-normal ml-2">
-                ({formatDimension(stockSheet?.length || 0)} x{' '}
-                {formatDimension(stockSheet?.width || 0)})
+                ({formatDisplay(stockSheet?.length || 0, units)}{suffix} x{' '}
+                {formatDisplay(stockSheet?.width || 0, units)}{suffix})
               </span>
             </h4>
 
@@ -60,10 +63,10 @@ export function CutChecklist({ solution, stockSheets }: CutChecklistProps) {
                     </td>
                     <td className="py-1.5 font-medium">{p.label}</td>
                     <td className="py-1.5">
-                      {formatDimension(p.width)}&quot;
+                      {formatDisplay(p.width, units)}{suffix}
                     </td>
                     <td className="py-1.5">
-                      {formatDimension(p.height)}&quot;
+                      {formatDisplay(p.height, units)}{suffix}
                     </td>
                     <td className="py-1.5 text-muted-foreground">
                       {p.rotated ? 'Yes' : '—'}
@@ -84,8 +87,8 @@ export function CutChecklist({ solution, stockSheets }: CutChecklistProps) {
           <ul className="text-sm space-y-1">
             {solution.unplacedPanels.map((p) => (
               <li key={p.id} className="text-destructive">
-                {p.label} ({formatDimension(p.length)}&quot; x{' '}
-                {formatDimension(p.width)}&quot;) x{p.quantity}
+                {p.label} ({formatDisplay(p.length, units)}{suffix} x{' '}
+                {formatDisplay(p.width, units)}{suffix}) x{p.quantity}
               </li>
             ))}
           </ul>

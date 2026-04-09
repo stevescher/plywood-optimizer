@@ -106,6 +106,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       stockSheets: state.stockSheets,
       panels: state.panels,
       kerf: state.kerf,
+      units: state.units,
       savedAt: new Date().toISOString(),
     };
   },
@@ -116,6 +117,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       stockSheets: data.stockSheets,
       panels: data.panels,
       kerf: data.kerf,
+      units: data.units,
     }),
 
   reset: () =>
