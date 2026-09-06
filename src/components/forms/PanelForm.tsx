@@ -83,6 +83,12 @@ export function PanelForm() {
             <button
               onClick={() => updatePanel(panel.id, { lockRotation: !panel.lockRotation })}
               title={panel.lockRotation ? 'Rotation locked — click to allow' : 'Click to lock grain direction'}
+              aria-label={
+                panel.lockRotation
+                  ? `Rotation locked for ${panel.label || `Panel ${idx + 1}`} — click to allow`
+                  : `Lock grain direction for ${panel.label || `Panel ${idx + 1}`}`
+              }
+              aria-pressed={panel.lockRotation}
               className={`h-6 w-6 rounded flex items-center justify-center transition-colors
                 ${panel.lockRotation
                   ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100'
@@ -95,6 +101,7 @@ export function PanelForm() {
             <button
               onClick={() => removePanel(panel.id)}
               disabled={panels.length <= 1}
+              aria-label={`Remove ${panel.label || `Panel ${idx + 1}`}`}
               className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground
                          hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 disabled:opacity-30
                          transition-colors"

@@ -98,13 +98,20 @@ export function LayoutViewer() {
   const dialogRef = useRef<HTMLDivElement>(null);
   const lastFocusedRef = useRef<HTMLElement | null>(null);
 
-  // Lock background scroll + keyboard nav while lightbox is open
+  // Lock background scroll + keyboard nav while lightbox is open.
+  // Deliberately depends only on `expandedSheetIdx` (open/close/sheet-switch),
+  // not `solutions` — a keyboard nudge or rotate inside the lightbox updates
+  // `solutions`, and re-running this effect on every such edit would restore
+  // focus to the dialog container (see the focus-management block below),
+  // yanking focus off the piece the user is actively moving after a single
+  // arrow-key press. Live values needed inside the handler are read fresh from
+  // the store instead of closing over stale props.
   useEffect(() => {
     if (expandedSheetIdx === null) { document.body.style.overflow = ''; return; }
     document.body.style.overflow = 'hidden';
-    const total = solutions[activeSolutionIndex]?.sheets.length ?? 0;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setExpandedSheetIdx(null);
+      const total = useLayoutStore.getState().solutions[useLayoutStore.getState().activeSolutionIndex]?.sheets.length ?? 0;
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown')
         setExpandedSheetIdx((i) => (i !== null && i < total - 1 ? i + 1 : i));
       if (e.key === 'ArrowLeft' || e.key === 'ArrowUp')
@@ -138,7 +145,7 @@ export function LayoutViewer() {
       document.body.style.overflow = '';
       lastFocusedRef.current?.focus?.();
     };
-  }, [expandedSheetIdx, solutions, activeSolutionIndex]);
+  }, [expandedSheetIdx]);
 
   if (solutions.length === 0) {
     return (
@@ -299,6 +306,14 @@ export function LayoutViewer() {
         </div>
       </div>
 
+      {/* Screen-reader-only status announcements for re-optimize / add-sheets-
+          and-replan actions — the buttons' own label changes aren't reliably
+          announced without a dedicated live region. */}
+      <div role="status" aria-live="polite" className="sr-only">
+        {reOptimizing ? 'Re-planning cuts around anchored pieces…' : ''}
+        {fixing ? 'Adding sheets and re-planning cuts…' : ''}
+      </div>
+
       {/* ── Anchor banner ────────────────────────────────────────────── */}
       {pinnedCount > 0 && view === 'diagram' && (
         <div className="mx-4 mt-3 px-4 py-2.5 rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40
@@ -328,7 +343,11 @@ export function LayoutViewer() {
         const { suggestions, unfittable } = suggestFixes(activeSolution, stockSheets);
         const totalUnplaced = activeSolution.unplacedPanels.reduce((s, p) => s + p.quantity, 0);
         return (
-          <div className="mx-4 mt-3 rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 shrink-0 overflow-hidden">
+          <div
+            role="status"
+            aria-live="polite"
+            className="mx-4 mt-3 rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 shrink-0 overflow-hidden"
+          >
             {/* Header */}
             <div className="px-4 py-2.5 flex items-center gap-2 border-b border-red-100 dark:border-red-900">
               <AlertTriangle className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0" />
@@ -540,7 +559,7 @@ export function LayoutViewer() {
               aria-label={`Sheet ${idx + 1}${totalSheets > 1 ? ` of ${totalSheets}` : ''}${stockSheet.label ? ` — ${stockSheet.label}` : ''}`}
               tabIndex={-1}
               className="relative bg-card rounded-2xl shadow-2xl overflow-auto p-6
-                         max-w-[95vw] max-h-[92vh] outline-none"
+                         max-w-[95vw] max-h-[92vh] outline-none focus-visible:ring-2 focus-visible:ring-ring"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header row: sheet counter + close */}

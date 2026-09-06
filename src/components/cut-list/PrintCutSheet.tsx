@@ -104,11 +104,11 @@ export function PrintCutSheet({ solution, stockSheets }: PrintCutSheetProps) {
             <table className="w-full text-sm border-collapse">
               <thead>
                 <tr className="text-left border-b-2 border-black">
-                  <th className="w-8 py-1">✓</th>
-                  <th className="py-1">Panel</th>
-                  <th className="py-1">Length</th>
-                  <th className="py-1">Width</th>
-                  <th className="py-1">Rotated</th>
+                  <th scope="col" className="w-8 py-1"><span className="sr-only">Cut</span>✓</th>
+                  <th scope="col" className="py-1">Panel</th>
+                  <th scope="col" className="py-1">Length</th>
+                  <th scope="col" className="py-1">Width</th>
+                  <th scope="col" className="py-1">Rotated</th>
                 </tr>
               </thead>
               <tbody>

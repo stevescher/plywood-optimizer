@@ -19,6 +19,7 @@ import { useOptimizer } from '@/hooks/useOptimizer';
 import { Scissors, Undo2, Redo2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { AppFooter } from '@/components/AppFooter';
 import type { HistoryEntry } from '@/store/useHistoryStore';
 
 /** Snapshot of the live layout, handed to undo()/redo() so the state being
@@ -85,6 +86,17 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-screen bg-background">
+      {/* Skip link — visually hidden until focused, lets keyboard users jump
+          past the header/sidebar straight to the layout viewer. */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50
+                   focus:px-3 focus:py-2 focus:rounded-lg focus:bg-primary focus:text-primary-foreground
+                   focus:text-sm focus:font-semibold"
+      >
+        Skip to layout viewer
+      </a>
+
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <header className="h-12 border-b border-border px-4 flex items-center justify-between bg-card shrink-0 z-10 shadow-[0_1px_0_rgba(0,0,0,0.06)]">
         <div className="flex items-center gap-3">
@@ -94,9 +106,9 @@ export default function Home() {
               style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)' }}>
               <Scissors className="h-3.5 w-3.5 text-white" />
             </div>
-            <span className="font-extrabold text-foreground text-sm tracking-tight">
+            <h1 className="font-extrabold text-foreground text-sm tracking-tight">
               Cut <span className="font-medium text-muted-foreground">Planner</span>
-            </span>
+            </h1>
           </div>
           <div className="w-px h-4 bg-border" />
           <ProjectMenu />
@@ -151,16 +163,27 @@ export default function Home() {
         </div>
       )}
 
+      {/* Screen-reader-only status announcements for the Plan Cuts action —
+          the button's own label change ("Plan Cuts" → "Planning…") isn't
+          reliably announced without a dedicated live region. */}
+      <div role="status" aria-live="polite" className="sr-only">
+        {isOptimizing
+          ? 'Planning cuts…'
+          : solutions.length > 0
+            ? `${solutions.length} layout${solutions.length !== 1 ? 's' : ''} ready`
+            : ''}
+      </div>
+
       {/* ── Body ───────────────────────────────────────────────────────── */}
       {/* Stacks vertically on narrow screens (shop tablets/phones) so the
           fixed-width sidebar never crushes the viewer; side-by-side from md up. */}
       <div className="flex flex-col md:flex-row flex-1 min-h-0">
 
         {/* ── Sidebar ──────────────────────────────────────────────────── */}
-        <aside className="w-full md:w-[360px] shrink-0 flex flex-col border-b md:border-b-0 md:border-r border-border max-h-[55vh] md:max-h-none"
+        <aside className="w-full md:w-[360px] shrink-0 flex flex-col min-h-0 border-b md:border-b-0 md:border-r border-border max-h-[55%] md:max-h-none"
           style={{ background: 'var(--sidebar)' }}>
 
-          <ScrollArea className="flex-1">
+          <ScrollArea className="flex-1 min-h-0">
             <div className="p-4 space-y-5">
 
               {/* Unit system — must be set before entering any measurements */}
@@ -171,7 +194,7 @@ export default function Home() {
 
               {/* Stock Sheets */}
               <section>
-                <div className="section-header mb-3">Stock Sheets</div>
+                <h2 className="section-header mb-3">Stock Sheets</h2>
                 <StockSheetForm />
               </section>
 
@@ -180,7 +203,7 @@ export default function Home() {
 
               {/* Panels */}
               <section>
-                <div className="section-header mb-3">Required Panels</div>
+                <h2 className="section-header mb-3">Required Panels</h2>
                 <PanelForm />
               </section>
 
@@ -189,7 +212,7 @@ export default function Home() {
 
               {/* Settings */}
               <section>
-                <div className="section-header mb-3">Blade Settings</div>
+                <h2 className="section-header mb-3">Blade Settings</h2>
                 <KerfSetting />
               </section>
 
@@ -210,11 +233,13 @@ export default function Home() {
         </aside>
 
         {/* ── Main viewer ──────────────────────────────────────────────── */}
-        <main className="flex-1 min-w-0 bg-muted/30">
+        <main id="main-content" tabIndex={-1} className="flex-1 min-w-0 bg-muted/30 focus:outline-none">
           <LayoutViewer />
         </main>
 
       </div>
+
+      <AppFooter />
     </div>
   );
 }

@@ -210,7 +210,7 @@ export function PanelImport({ onClose }: PanelImportProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <span className="text-sm font-semibold text-foreground">Import Panels from CSV</span>
-        <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+        <button onClick={onClose} aria-label="Close import dialog" className="text-muted-foreground hover:text-foreground">
           <X className="h-4 w-4" />
         </button>
       </div>

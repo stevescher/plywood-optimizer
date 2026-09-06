@@ -10,6 +10,7 @@ interface LayoutState {
   revealedCount: number;
 
   setSolutions: (solutions: Solution[]) => void;
+  updateSolutions: (solutions: Solution[]) => void;
   setActive: (index: number) => void;
   setOptimizing: (optimizing: boolean) => void;
   shuffleNext: () => void;
@@ -31,6 +32,14 @@ export const useLayoutStore = create<LayoutState>((set, get) => ({
       revealedCount: Math.min(3, solutions.length),
     });
   },
+
+  /** Patch the solutions array in place — for edits (drag/rotate/nudge a piece,
+   *  re-optimize around pinned pieces) to an already-planned layout. Unlike
+   *  setSolutions, this is not a fresh plan: it must not reset
+   *  activeSolutionIndex, revealedCount, or the checklist, or an edit to a
+   *  non-first alternative would silently jump the view back to layout 1 and
+   *  wipe the shop checklist the user may already be working from. */
+  updateSolutions: (solutions) => set({ solutions }),
 
   setActive: (index) => set({ activeSolutionIndex: index }),
   setOptimizing: (optimizing) => set({ isOptimizing: optimizing }),

@@ -52,11 +52,11 @@ export function CutChecklist({ solution, stockSheets }: CutChecklistProps) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-muted-foreground text-xs">
-                  <th className="w-8 pb-1"></th>
-                  <th className="pb-1">Panel</th>
-                  <th className="pb-1">Length</th>
-                  <th className="pb-1">Width</th>
-                  <th className="pb-1">Rotated</th>
+                  <th scope="col" className="w-8 pb-1"><span className="sr-only">Cut</span></th>
+                  <th scope="col" className="pb-1">Panel</th>
+                  <th scope="col" className="pb-1">Length</th>
+                  <th scope="col" className="pb-1">Width</th>
+                  <th scope="col" className="pb-1">Rotated</th>
                 </tr>
               </thead>
               <tbody>

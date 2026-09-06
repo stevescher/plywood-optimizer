@@ -109,6 +109,7 @@ export function StockSheetForm() {
               className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 shrink-0"
               onClick={() => removeStockSheet(sheet.id)}
               disabled={stockSheets.length <= 1}
+              aria-label={`Remove ${sheet.label || `Sheet ${idx + 1}`}`}
             >
               <Trash2 className="h-3.5 w-3.5" />
             </Button>

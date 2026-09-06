@@ -116,7 +116,7 @@
   --canvas-piece-dim: rgba(255,255,255,0.8);
   --canvas-trim: #fee2e2;                          /* trim overlay */
   --canvas-trim-opacity: 0.5;
-  --canvas-dim-label: #94a3b8;                     /* sheet dimension labels */
+  --canvas-dim-label: #64748b;                     /* sheet dimension labels — 4.5:1 on canvas-sheet */
   --canvas-piece-stroke: rgba(255,255,255,0.6);
   --canvas-grain: #1e293b;                          /* grain hatch on pieces */
   --canvas-grain-mismatch: #b45309;                 /* cross-grain hatch/flag (amber) */
@@ -186,7 +186,7 @@
   --canvas-piece-dim: rgba(241,245,249,0.75);
   --canvas-trim: #7f1d1d;
   --canvas-trim-opacity: 0.45;
-  --canvas-dim-label: #64748b;
+  --canvas-dim-label: #94a3b8;                      /* 6:1 on dark canvas-sheet */
   --canvas-piece-stroke: rgba(255,255,255,0.35);
   --canvas-grain: #e2e8f0;                          /* light hatch on dark-tinted pieces */
   --canvas-grain-mismatch: #fbbf24;

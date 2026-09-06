@@ -18,6 +18,7 @@ export function KerfSetting() {
           onChange={setKerf}
           placeholder={units === 'metric' ? '3' : '1/8'}
           units={units}
+          aria-label="Blade kerf"
         />
       </div>
       <div>

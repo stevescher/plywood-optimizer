@@ -159,14 +159,11 @@ export function SheetCanvas({ sheetLayout, stockSheet, sheetNumber, maxWidth, on
     ]
   );
 
-  const handlePointerUp = useCallback(() => {
-    if (!dragState) return;
-
-    const p = sheetLayout.placements[dragState.placementIndex];
-    const snappedX = dragState.currentX;
-    const snappedY = dragState.currentY;
-
-    if (Math.abs(snappedX - p.x) > 0.05 || Math.abs(snappedY - p.y) > 0.05) {
+  /** Commit a piece's new (already-snapped/clamped) position to the store, push
+   *  undo history, and auto-pin it. Shared by pointer-drag release and the
+   *  keyboard arrow-key nudge path so both interaction methods stay in sync. */
+  const commitMove = useCallback(
+    (placementIndex: number, x: number, y: number) => {
       const layoutStore = useLayoutStore.getState();
       useHistoryStore.getState().pushState({
         solutions: layoutStore.solutions,
@@ -181,8 +178,8 @@ export function SheetCanvas({ sheetLayout, stockSheet, sheetNumber, maxWidth, on
             if (sheet.stockSheetId !== stockSheet.id || sheet.sheetIndex !== sheetLayout.sheetIndex)
               return sheet;
             const newPlacements = sheet.placements.map((pl, pi) => {
-              if (pi !== dragState!.placementIndex) return pl;
-              return { ...pl, x: snappedX, y: snappedY };
+              if (pi !== placementIndex) return pl;
+              return { ...pl, x, y };
             });
             const { steps: cutSequence, isApproximate: cutSequenceApproximate } =
               deriveCutSequenceFromPlacements(newPlacements, sheetW, sheetH, {
@@ -200,14 +197,27 @@ export function SheetCanvas({ sheetLayout, stockSheet, sheetNumber, maxWidth, on
           }),
         };
       });
-      layoutStore.setSolutions(updatedSolutions);
+      layoutStore.updateSolutions(updatedSolutions);
 
-      if (!isPinned(sheetKey, dragState.placementIndex)) {
-        togglePin(sheetKey, dragState.placementIndex);
+      if (!isPinned(sheetKey, placementIndex)) {
+        togglePin(sheetKey, placementIndex);
       }
+    },
+    [sheetLayout, stockSheet, sheetKey, sheetW, sheetH, isPinned, togglePin]
+  );
+
+  const handlePointerUp = useCallback(() => {
+    if (!dragState) return;
+
+    const p = sheetLayout.placements[dragState.placementIndex];
+    const snappedX = dragState.currentX;
+    const snappedY = dragState.currentY;
+
+    if (Math.abs(snappedX - p.x) > 0.05 || Math.abs(snappedY - p.y) > 0.05) {
+      commitMove(dragState.placementIndex, snappedX, snappedY);
     }
     setDragState(null);
-  }, [dragState, sheetLayout, stockSheet, sheetKey, sheetW, sheetH, isPinned, togglePin]);
+  }, [dragState, sheetLayout, commitMove]);
 
   // ── Pin click ──────────────────────────────────────────────────────────────
 
@@ -222,7 +232,7 @@ export function SheetCanvas({ sheetLayout, stockSheet, sheetNumber, maxWidth, on
   // ── Rotate piece ───────────────────────────────────────────────────────────
 
   const handleRotate = useCallback(
-    (e: React.MouseEvent, placementIndex: number) => {
+    (e: { stopPropagation(): void; preventDefault(): void }, placementIndex: number) => {
       e.stopPropagation();
       e.preventDefault();
 
@@ -292,7 +302,7 @@ export function SheetCanvas({ sheetLayout, stockSheet, sheetNumber, maxWidth, on
         };
       });
 
-      layoutStore.setSolutions(updatedSolutions);
+      layoutStore.updateSolutions(updatedSolutions);
 
       // Auto-pin on rotate
       if (!isPinned(sheetKey, placementIndex)) {
@@ -300,6 +310,81 @@ export function SheetCanvas({ sheetLayout, stockSheet, sheetNumber, maxWidth, on
       }
     },
     [sheetLayout, stockSheet, sheetKey, sheetW, sheetH, scale, isPinned, togglePin]
+  );
+
+  // ── Keyboard nudge (arrow keys) ────────────────────────────────────────────
+  // Keyboard/switch-device equivalent to pointer drag: arrow keys move the
+  // focused piece by one step (a larger step with Shift), snapping to sheet
+  // edges/trim and neighboring pieces exactly like a pointer drag release.
+  // Enter/Space rotates (same as clicking the rotate button); "P" toggles pin.
+  //
+  // The step must clear snapToEdges' own snap radius (8px in screen space, i.e.
+  // 8/scale sheet units) or every nudge snaps straight back to the edge/piece it
+  // started against and the piece never visibly moves. Deriving both steps from
+  // that same radius keeps them correct at any zoom level or sheet size, instead
+  // of a fixed unit value that works only for some scales.
+  const snapThreshold = 8 / scale;
+  const NUDGE_STEP = snapThreshold * 1.5;
+  const NUDGE_STEP_LARGE = snapThreshold * 6;
+  const [announcement, setAnnouncement] = useState('');
+
+  const handlePieceKeyDown = useCallback(
+    (e: React.KeyboardEvent, placementIndex: number) => {
+      const p = sheetLayout.placements[placementIndex];
+      const label = p.label || `Panel ${placementIndex + 1}`;
+      const rotationLocked = panels.find((pl) => pl.id === p.panelId)?.lockRotation ?? false;
+
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        // Stop the lightbox's window-level Escape/arrow handler from also
+        // seeing this key — it isn't arrow/Escape so it's a no-op there today,
+        // but stopping propagation keeps this control self-contained.
+        e.stopPropagation();
+        if (rotationLocked) {
+          setAnnouncement(`${label} rotation is locked`);
+        } else {
+          handleRotate(e, placementIndex);
+          setAnnouncement(`${label} rotated`);
+        }
+        return;
+      }
+      // Unmodified "P" only — Ctrl/Cmd+P is the browser's print shortcut and
+      // must keep working while a piece has focus.
+      if (e.key.toLowerCase() === 'p' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        const wasPinned = isPinned(sheetKey, placementIndex);
+        togglePin(sheetKey, placementIndex);
+        setAnnouncement(`${label} ${wasPinned ? 'unpinned' : 'pinned'}`);
+        return;
+      }
+
+      let dx = 0;
+      let dy = 0;
+      const step = e.shiftKey ? NUDGE_STEP_LARGE : NUDGE_STEP;
+      if (e.key === 'ArrowLeft') dx = -step;
+      else if (e.key === 'ArrowRight') dx = step;
+      else if (e.key === 'ArrowUp') dy = -step;
+      else if (e.key === 'ArrowDown') dy = step;
+      else return;
+
+      e.preventDefault();
+      // Stop the lightbox's window-level arrow-key handler from also
+      // interpreting this as "go to next/previous sheet" while a piece has
+      // keyboard focus inside the expanded view.
+      e.stopPropagation();
+      const rawX = Math.max(stockSheet.trimLeft, Math.min(p.x + dx, sheetW - stockSheet.trimRight - p.width));
+      const rawY = Math.max(stockSheet.trimTop, Math.min(p.y + dy, sheetH - stockSheet.trimBottom - p.height));
+      const { x: newX, y: newY } = snapToEdges(rawX, rawY, placementIndex);
+      if (Math.abs(newX - p.x) > 0.001 || Math.abs(newY - p.y) > 0.001) {
+        commitMove(placementIndex, newX, newY);
+        const suffix = unitSuffix(units);
+        setAnnouncement(
+          `${label} moved to ${formatDisplay(newX, units)}${suffix}, ${formatDisplay(newY, units)}${suffix}`
+        );
+      }
+    },
+    [sheetLayout.placements, panels, stockSheet, sheetW, sheetH, units, snapToEdges, commitMove, sheetKey, togglePin, isPinned, handleRotate, NUDGE_STEP, NUDGE_STEP_LARGE]
   );
 
   // ── Rendering ──────────────────────────────────────────────────────────────
@@ -326,8 +411,8 @@ export function SheetCanvas({ sheetLayout, stockSheet, sheetNumber, maxWidth, on
         width={svgW}
         height={svgH}
         viewBox={`0 0 ${svgW} ${svgH}`}
-        role="img"
-        aria-label={`Cutting diagram for sheet ${sheetNumber}${stockSheet.label ? ` (${stockSheet.label})` : ''}: ${fmt(sheetW)}${sfx} by ${fmt(sheetH)}${sfx}, ${sheetLayout.placements.length} pieces, ${sheetLayout.wastePercent.toFixed(0)}% waste. The Shop List tab lists every piece in an accessible table.`}
+        role="group"
+        aria-label={`Cutting diagram for sheet ${sheetNumber}${stockSheet.label ? ` (${stockSheet.label})` : ''}: ${fmt(sheetW)}${sfx} by ${fmt(sheetH)}${sfx}, ${sheetLayout.placements.length} pieces, ${sheetLayout.wastePercent.toFixed(0)}% waste. Tab to a piece to move, rotate, or pin it with the keyboard. The Shop List tab also lists every piece in an accessible table.`}
         className="rounded-xl border border-border bg-card select-none shadow-sm"
         // Stop the browser from scrolling/panning the page when a drag starts on
         // a touch device, so panels can actually be dragged on a shop tablet.
@@ -480,11 +565,24 @@ export function SheetCanvas({ sheetLayout, stockSheet, sheetNumber, maxWidth, on
             ? `grain-mismatch-${grainAxis}-${uid}`
             : `grain-${grainAxis}-${uid}`;
 
+          const pieceLabel = p.label || `Panel ${i + 1}`;
+          const rotateHint = rotationLocked ? 'rotation is locked' : 'Enter to rotate';
+          const pinHint = pinned ? 'P to unpin' : 'P to pin';
+          const pieceDescription =
+            `${pieceLabel}, ${fmt(p.width)}${sfx} by ${fmt(p.height)}${sfx}` +
+            `${pinned ? ', pinned' : ''}${rotationLocked ? ', rotation locked' : ''}. ` +
+            `Use arrow keys to move, ${rotateHint}, ${pinHint}.`;
+
           return (
             <g
               key={`${p.panelId}-${i}`}
+              role="button"
+              tabIndex={0}
+              aria-label={pieceDescription}
               style={{ cursor: isDragging ? 'grabbing' : 'grab', opacity: isDragging ? 0.75 : 0.9 }}
+              className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-1"
               onPointerDown={(e) => handlePointerDown(e, i)}
+              onKeyDown={(e) => handlePieceKeyDown(e, i)}
             >
               <rect
                 x={px} y={py} width={pw} height={ph}
@@ -719,6 +817,11 @@ export function SheetCanvas({ sheetLayout, stockSheet, sheetNumber, maxWidth, on
           </button>
         )}
       </div>{/* end relative wrapper */}
+
+      {/* Screen-reader-only announcements for keyboard move/rotate/pin actions
+          on a focused piece — these mutate visual position/state only, with no
+          other on-screen text change an AT user would otherwise be told about. */}
+      <div role="status" aria-live="polite" className="sr-only">{announcement}</div>
 
       {/* ── Approximate cut sequence notice ─────────────────────────────── */}
       {showCutSequence && sheetLayout.cutSequenceApproximate && (
